@@ -2,6 +2,7 @@ package bot
 
 import (
 	"log"
+	"medgebot/internal/pkg/storage"
 	"medgebot/irc"
 	"sync"
 )
@@ -9,6 +10,7 @@ import (
 type Bot struct {
 	sync.Mutex
 	client    *irc.Irc
+	storage   *storage.Storage
 	channel   string
 	consumers []func(irc.Message)
 }
@@ -18,6 +20,7 @@ func New() Bot {
 
 	return Bot{
 		client:    client,
+		storage:   storage.New(&storage.VaultStorage{}),
 		channel:   "",
 		consumers: []func(irc.Message){},
 	}
