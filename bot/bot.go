@@ -1,9 +1,11 @@
 package bot
 
 import (
+	"github.com/hashicorp/vault/api"
 	"log"
 	"medgebot/internal/pkg/storage"
 	"medgebot/irc"
+	"os"
 	"sync"
 )
 
@@ -16,11 +18,22 @@ type Bot struct {
 }
 
 func New() Bot {
+	token := os.Getenv("TWITCH_TOKEN")
+	vaultUrl := os.Getenv("VAULT_URL")
+	vaultConfig := &storage.VaultStorageConfig{
+		ClientConfig: &api.Config{
+			Address: vaultUrl,
+		},
+		Token:      token,
+		SecretPath: "secret/twitchToken",
+	}
+	engine, _ := storage.NewVaultStorage(vaultConfig)
+
 	client := irc.NewClient()
 
 	return Bot{
 		client:    client,
-		storage:   storage.New(&storage.VaultStorage{}),
+		storage:   storage.New(engine),
 		channel:   "",
 		consumers: []func(irc.Message){},
 	}
