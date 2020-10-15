@@ -29,6 +29,7 @@ func (s *VaultStore) Connect(url, token string) error {
 
 	s.client = client
 	s.client.SetToken(token)
+
 	return nil
 }
 
@@ -38,7 +39,14 @@ func (s VaultStore) GetTwitchToken() (string, error) {
 		return "", fmt.Errorf("ERROR: fetch Twitch Token from Store - %v", err)
 	}
 
-	token, ok := secret.Data["token"]
+	// This can happen from the underlying api
+	// @see github.com/hashicorp/vault/api@v1.0.4/logical.go:81
+	if secret == nil {
+		return "", fmt.Errorf("ERROR: strange things happening - no error and no ptr to secret")
+	}
+
+	dataMap := secret.Data["data"].(map[string]interface{})
+	token, ok := dataMap["token"]
 	if !ok {
 		return "", fmt.Errorf("Twitch Token not found in Vault")
 	}
